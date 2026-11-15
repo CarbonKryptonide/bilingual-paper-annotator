@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$title_zh · 双栏精读</title>
+<style>
+$font_faces
+$mark_colors
+:root {
+  --navy:#12233a; --ink:#17283a; --paper:#faf8f1; --line:#d8d5cb;
+  --muted:#42566a; --link:#155681;
+  --ui:"IBM Plex Sans","Microsoft YaHei UI","PingFang SC",sans-serif;
+  --serif:Lora,Georgia,"Noto Serif CJK SC",serif;
+}
+* { box-sizing:border-box }
+html { scroll-padding-block-start:6rem }
+body { margin:0; background:var(--paper); color:var(--ink); font:1rem/1.7 var(--ui); overflow-wrap:anywhere }
+a { color:var(--link); text-underline-offset:.22em }
+:focus-visible { outline:3px solid #9a4d16; outline-offset:3px }
+.wrap { max-inline-size:83rem; margin-inline:auto; padding-inline:clamp(1rem,4vw,3.25rem) }
+.skip { position:fixed; inset-block-start:.7rem; inset-inline-start:1rem; z-index:3; color:var(--navy); background:white; padding:.55rem .8rem }
+.skip:not(:focus) { clip-path:inset(50%); inline-size:1px; block-size:1px; padding:0; overflow:hidden }
+header { background:var(--navy); color:var(--paper); padding-block:2rem 1.5rem; border-block-end:3px solid #c39860 }
+header a { color:#b9def8 }
+.kicker { color:#e1bf91; font-weight:600; margin:0 0 .5rem }
+h1 { font-size:clamp(1.65rem,3.4vw,2.7rem); line-height:1.24; text-wrap:balance; margin:0 0 .55rem }
+.title-en { font:1.04rem/1.55 var(--serif); max-inline-size:82ch; margin:0 0 .6rem }
+.citation { color:#e0e9f0; margin:.4rem 0 1rem }
+.legend,.nav-links { display:flex; flex-wrap:wrap; gap:.35rem .65rem; align-items:center }
+.chip { padding:.12rem .54rem; border-radius:4px; font-size:.83rem; background:var(--mark); color:var(--ink) }
+nav { position:sticky; inset-block-start:0; z-index:2; background:var(--paper); border-block-end:1px solid var(--line); max-block-size:5.35rem; overflow:auto }
+.nav-links { padding-block:.24rem; gap:.12rem .55rem }
+.nav-links a { display:inline-flex; align-items:center; max-inline-size:100%; min-block-size:2.3rem; padding:.22rem .4rem; color:var(--ink); font-weight:600 }
+.scope { color:var(--muted); max-inline-size:90ch; margin:1.4rem 0 }
+h2,h3 { line-height:1.35 }
+h2 { margin-block:2rem .5rem; padding-block-end:.5rem; border-block-end:1px solid var(--line) }
+h3 { margin-block:1.2rem .35rem; font-size:1.08rem }
+.columns,.pair { display:grid; grid-template-columns:minmax(0,1.8fr) minmax(0,1fr); gap:clamp(1rem,4vw,2rem) }
+.columns { color:var(--muted); font-weight:600; font-size:.88rem; padding-block:.5rem; border-block-end:1px solid var(--line) }
+.pair { align-items:start; padding-block:1.1rem; border-block-end:1px solid var(--line) }
+.source { color:var(--muted); font-size:.86rem; margin:0 0 .45rem }
+.en { font:1.04rem/1.72 var(--serif); margin:0 0 .7rem; white-space:pre-wrap }
+.zh { margin:0; background:#f0ece2; border-block-start:1px solid var(--line); border-inline-start:2px solid #ab9c7c; padding:.8rem 1rem; white-space:pre-wrap }
+mark { background:var(--mark); color:inherit; border-radius:2px; box-decoration-break:clone }
+.annotation { background:#f2ebe0; background:color-mix(in srgb,var(--mark) 50%,var(--paper)); border-inline-start:4px solid var(--edge); padding:.76rem .95rem }
+.annotation dl,.annotation dd { margin:0 }
+.annotation dt { font-weight:700; margin-block:.5rem .08rem }
+.annotation dt:first-child { margin-block-start:0 }
+.study-guide { padding:.6rem 1rem; border:1px solid var(--line); background:#f3efe5; margin-block:1rem }
+.study-guide h2 { font-size:1.15rem; margin-block:.15rem .42rem; padding:0; border:0 }
+.study-guide p { margin:.25rem 0 }
+.study-guide ul { display:flex; flex-wrap:wrap; gap:.2rem 1.1rem; list-style:none; margin:.3rem 0 0; padding:0 }
+.study-guide a { display:inline-flex; align-items:center; min-block-size:2.3rem; font-weight:600 }
+.study-prompt { padding:.7rem .95rem; background:#f5f0e5; border-inline-start:4px solid #80683d; margin-block-end:.7rem }
+.study-label { color:#68502d; font-size:.83rem; font-weight:700; margin:0 }
+.study-question { font-weight:700; margin:.22rem 0 .35rem }
+.study-answer summary { cursor:pointer; color:var(--link); font-weight:600; min-block-size:2.3rem; padding-block:.22rem }
+.study-answer-body { border-block-start:1px solid var(--line); margin-block-start:.1rem }
+.study-answer-body p { margin:.55rem 0; white-space:pre-line }
+.study-sources,.study-next { font-size:.85rem }
+.study-next { margin:.34rem 0 0 }
+.evidence-links { display:flex; flex-wrap:wrap; gap:.25rem 1rem; margin:.75rem 0 0 }
+.pair:target,.evidence:target,.study-prompt:target { outline:2px solid #97611e; outline-offset:4px }
+.evidence { margin:1.1rem 0; padding:clamp(.7rem,3vw,1.25rem); background:#f2eee4; border:1px solid var(--line) }
+.evidence img { display:block; max-inline-size:100%; block-size:auto; margin:0 auto 1rem; background:white }
+figcaption p { margin:.45rem 0 }
+.figure-name { font-weight:700; margin:0 0 .7rem }
+.chain { padding-inline-start:1.6rem }
+.chain li { padding:.4rem .6rem; border-block-end:1px solid var(--line) }
+.chain strong { margin-inline-end:.55em }
+.chain a { margin-inline-start:.55em }
+.bounds { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem }
+.bounds div { background:#eee9df; border-inline-start:3px solid #a48961; padding:.75rem 1rem }
+.bounds p { margin:.4rem 0 0 }
+.references { font: .94rem/1.52 var(--serif) }
+footer { margin-block-start:2rem; padding-block:1.4rem; background:#ede8dc; color:var(--muted) }
+footer pre { white-space:pre-wrap; font-size:.82rem }
+@media (max-width:47.5rem) {
+  header { padding-block:1.3rem 1rem }
+  nav { position:static; max-block-size:none; overflow:visible }
+  html { scroll-padding-block-start:.8rem }
+  .columns { display:none }
+  .pair,.bounds { grid-template-columns:1fr }
+  h2 { margin-block-start:1.3rem }
+}
+@media (pointer:coarse) { .nav-links a,.study-guide a,.study-answer summary { min-block-size:44px; min-inline-size:44px } }
+</style>
+</head>
+<body>
+<a class="skip" href="#reader-content">跳到正文</a>
+<header><div class="wrap">
+<p class="kicker">论文精读 · 论证与证据</p>
+<h1>$title_zh</h1>
+<p class="title-en" lang="en">$title</p>
+<p class="citation">$citation$course$source_url</p>
+<div class="legend" aria-label="五色标注图例">$legend</div>
+</div></header>
+<nav aria-label="章节"><div class="wrap nav-links">$navigation</div></nav>
+<main class="wrap" id="reader-content" tabindex="-1">
+<p class="scope">$scope</p>
+$study_guide
+<div class="columns" aria-hidden="true"><span>英文原文与中文译文</span><span>论证批注</span></div>
+$sections
+$summary
+$references
+</main>
+<footer><div class="wrap"><details><summary>字体许可证</summary>$font_licenses</details></div></footer>
+</body>
+</html>

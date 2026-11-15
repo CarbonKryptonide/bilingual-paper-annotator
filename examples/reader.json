@@ -1,0 +1,137 @@
+{
+  "title": "Does a mixing step improve assay repeatability?",
+  "title_zh": "预混能改善测定的重复性吗？",
+  "citation": "自写示例 · 虚构研究与模拟数字",
+  "course": "论文精读练习",
+  "scope": "这是用于试跑版式的虚构示例。页码和数据用于演示，不能作为真实研究结果引用。",
+  "sections": [
+    {
+      "id": "introduction",
+      "title": "1 引言",
+      "blocks": [
+        {
+          "id": "P01",
+          "source": "示例 p. 1",
+          "en": "Repeated readings under the same conditions varied between sample wells. We hypothesized that a brief mixing step would reduce variation in the assay.",
+          "zh": "在相同条件下重复测定时，不同样品孔的读数仍有波动。我们假设，在读数前短暂混合可降低测定结果的波动。",
+          "marks": [{"kind": "thesis", "text": "a brief mixing step would reduce variation"}],
+          "annotation": {
+            "function": "提出可检验的假设。",
+            "role": "把测定波动转化为可操作的混合条件对照。",
+            "critique": "提出的是重复性问题。即使重复性改善，也还要单独检验准确度。"
+          }
+        }
+      ]
+    },
+    {
+      "id": "methods",
+      "title": "2 方法",
+      "blocks": [
+        {
+          "id": "P02",
+          "source": "示例 p. 2",
+          "en": "We assigned twelve wells to each condition in a randomized plate layout and compared their coefficients of variation.",
+          "zh": "每种条件分配十二个样品孔，按随机顺序布置在板上。我们比较了两种条件下读数的变异系数。",
+          "marks": [
+            {"kind": "method", "text": "randomized plate layout"},
+            {"kind": "term", "text": "coefficients of variation"}
+          ],
+          "annotation": {
+            "function": "规定比较方法及指标。",
+            "role": "给出预混效果的可观察判据。",
+            "critique": "随机布板可以减轻孔位偏差。跨批次的重复性需要多批次样品。"
+          }
+        }
+      ]
+    },
+    {
+      "id": "results",
+      "title": "3 结果与讨论",
+      "blocks": [
+        {
+          "id": "P03",
+          "source": "示例 p. 3",
+          "en": "The coefficient of variation was 8% without mixing and 5% after mixing. The measurements came from a single plate, so the estimate does not establish between-plate repeatability.",
+          "zh": "未混合和预混条件下的变异系数分别为 8% 和 5%。测定只使用了一块板，无法判断改善能否在不同板间重现。",
+          "marks": [
+            {"kind": "data", "text": "8% without mixing and 5% after mixing"},
+            {"kind": "limit", "text": "The measurements came from a single plate"}
+          ],
+          "evidence": ["fig-1"],
+          "annotation": {
+            "function": "报告观察值，并限定可推广范围。",
+            "role": "给假设提供初步支持，结论限于这块板。",
+            "critique": "图中未提供跨板重复或不确定性，无法用它估计效应的稳定程度。"
+          }
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "fig-1",
+      "title": "图 1 · 测定重复性",
+      "file": "assay-repeatability.png",
+      "source": "示例 p. 3",
+      "caption_en": "Illustrative coefficients of variation in the two assay conditions: 8% without mixing and 5% after mixing.",
+      "caption_zh": "模拟数据。未混合组的变异系数为 8%，预混组为 5%。",
+      "after": "P03"
+    }
+  ],
+  "study": [
+    {
+      "number": 1,
+      "at": "P01",
+      "question": "作者想解决什么问题？",
+      "answer": "判断读数前短暂预混，能否降低相同条件下不同样品孔之间的测定波动。",
+      "sources": [{"target": "P01", "label": "引言"}]
+    },
+    {
+      "number": 2,
+      "at": "P02",
+      "question": "作者用了什么方法？",
+      "answer": "随机布置两种操作条件，每组十二孔，用变异系数比较同一板上的读数波动。",
+      "sources": [{"target": "P02", "label": "方法"}]
+    },
+    {
+      "number": 3,
+      "at": "P03",
+      "question": "作者给出的主要答案是什么？",
+      "answer": "示例里，未混合组的变异系数为 8%，预混组为 5%。单板观察支持预混可能降低同板波动，跨板效果尚需验证。",
+      "sources": [{"target": "fig-1", "label": "图 1"}]
+    },
+    {
+      "number": 4,
+      "at": "P01",
+      "question": "为什么值得研究这个问题？",
+      "answer": "如果操作能降低重复读数的波动，就更容易区分实验条件造成的差异与测量噪声。",
+      "sources": [{"target": "P01", "label": "问题来源"}]
+    },
+    {
+      "number": 5,
+      "at": "P01",
+      "question": "前人做到哪里，还缺什么？",
+      "answer": "这个虚构示例只给出孔间读数波动，没有提供前人研究。应从真正论文的引言或引文里核对已有方法。",
+      "sources": [{"target": "P01", "label": "示例引言"}]
+    },
+    {
+      "number": 6,
+      "at": "P03",
+      "question": "我要不要继续读？为什么？",
+      "answer": "若在比较如何控制同板读数波动，可以继续看实验设计。若需要跨批次已验证的方法，本例的范围不足，可以先记下这项限制。",
+      "sources": [{"target": "P02", "label": "实验设计"}, {"target": "P03", "label": "证据边界"}]
+    }
+  ],
+  "summary": {
+    "chain": [
+      {"label": "问题", "text": "如何改善同一块板上的测定重复性？", "target": "P01"},
+      {"label": "论点", "text": "读数前预混可能降低波动。", "target": "P01"},
+      {"label": "证据", "text": "模拟对照中，变异系数由 8% 降至 5%。", "target": "fig-1"},
+      {"label": "证据边界", "text": "没有跨板重复。", "target": "P03"},
+      {"label": "结论", "text": "值得在多个独立批次检验这项操作。"}
+    ],
+    "claim": "预混可能改善同一块板上的读数重复性。",
+    "strongest": "预先定义比较指标，并直接比较两种操作条件。",
+    "weakest": "数据只有一块板，不能估计跨批次的可重复性。"
+  }
+}
