@@ -8,7 +8,7 @@ from operator import itemgetter
 from pathlib import Path
 from string import Template
 
-from reader_data import COLORS, NOTE_FIELDS, load_reader
+from reader_data import COLORS, NOTE_FIELDS, load_reader, paragraphs
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets'
 
@@ -24,6 +24,9 @@ def render(data):
 
     def anchor(key, label):
         return f'<a href="#{key}">{escape(label)}</a>'
+
+    def note_prose(text):
+        return '<div class="note-prose">' + ''.join(f'<p>{escape(para)}</p>' for para in paragraphs(text)) + '</div>'
 
     prompts_by_block = {}
     study_links = []
@@ -70,11 +73,17 @@ def render(data):
         subtype = 'png' if image.suffix.lower() == '.png' else 'jpeg'
         title = escape(item['title'])
         caption_zh = escape(item['caption_zh'])
+        reading = ''
+        if 'annotation' in item:
+            reading = (
+                f'<aside class="annotation data figure-note" aria-label="{title} · 图表解读">'
+                f'<p class="figure-note-title"><strong>图表解读</strong></p>{note_prose(item["annotation"])}</aside>'
+            )
         visuals.setdefault(item['after'], []).append(
-            f'<figure class="evidence" id="{key}"><p class="figure-name">{title} · {escape(item["source"])}</p>'
+            f'<div class="evidence" id="{key}" tabindex="-1"><figure><p class="figure-name">{title} · {escape(item["source"])}</p>'
             f'<img src="data:image/{subtype};base64,{encoded}" alt="{title}"><figcaption>'
-            f'<p lang="en">{escape(item["caption_en"])}</p><p>{caption_zh}</p>'
-            f'{anchor(item["after"], "返回对应段落与批注")}</figcaption></figure>'
+            f'<p lang="en">{escape(item["caption_en"])}</p><p>{caption_zh}</p></figcaption></figure>{reading}'
+            f'<p class="evidence-return">{anchor(item["after"], "返回对应段落与批注")}</p></div>'
         )
 
     sections = []
@@ -92,10 +101,15 @@ def render(data):
                 )
                 en.append(f'<a href="#{target}">{passage}</a>' if target else passage)
             tone = next((kind for kind, _, _ in item['runs'] if kind), 'method')
-            fields = ''.join(f'<dt>{label}</dt><dd>{escape(item["annotation"][k])}</dd>' for k, label in NOTE_FIELDS.items())
+            annotation = item['annotation']
+            if isinstance(annotation, str):
+                body = note_prose(annotation)
+            else:
+                fields = ''.join(f'<dt>{label}</dt><dd>{escape(annotation[k])}</dd>' for k, label in NOTE_FIELDS.items())
+                body = f'<dl>{fields}</dl>'
             links = ''.join(anchor(k, f'查看{data["evidence"][k]["title"]}') for k in item['evidence'])
             actions = f'<p class="evidence-links">{links}</p>' if links else ''
-            notes = f'<aside class="annotation {tone}" aria-label="段落批注"><dl>{fields}</dl>{actions}</aside>'
+            notes = f'<aside class="annotation {tone}" aria-label="段落批注">{body}{actions}</aside>'
             if key in prompts_by_block:
                 notes = '<div>' + ''.join(prompts_by_block[key]) + notes + '</div>'
             sections.append(

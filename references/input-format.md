@@ -9,12 +9,14 @@ Use UTF-8 JSON. Keep the data and evidence crops in the task workspace. The rend
 | `course`, `source_url` | Optional course or project name and verified HTTPS/HTTP DOI or publisher link |
 | `scope` | Verified scope and any important coverage gaps, as a string |
 | `sections` | Ordered list of objects with `id`, `title`, `blocks` |
-| `evidence` | Optional list of image assets with `id`, `title`, `file`, `source`, `caption_en`, `caption_zh`, `after` |
+| `evidence` | Optional list of image assets with `id`, `title`, `file`, `source`, `caption_en`, `caption_zh`, `after`, and optional `annotation` |
 | `summary` | Object with `chain`, `claim`, `strongest`, `weakest`. Each chain item contains `label`, `text` and optional `target` |
 | `references` | Optional list of source bibliography entries. Use objects with `id` and `text` for linkable entries. Plain strings are supported for text-only entries. |
 | `study` | Optional list of three-pass prompts for the HTML renderer. Each has `number` (unique 1–16), `at` (block ID), `question`, `answer`, and optionally `sources` (list of objects with `target` and `label`) |
 
-Each block needs `id`, `source`, `en`, `zh`, and `annotation` (object with `function`, `role`, `critique`). Optional keys are `heading`, `marks` and `evidence`. The last lists evidence IDs cited by that block. The image's `after` is the block ID where it appears in the HTML and the source of the return link in either format. If that block has no explicit link to the asset, the renderer adds one. The PDF groups the evidence after the argument overview and links to it from the text.
+Each block needs `id`, `source`, `en`, `zh`, and `annotation`. Write new annotations as a plain Chinese string, with blank lines between paragraphs. The older object with `function`, `role`, and `critique` also renders. Optional block keys are `heading`, `marks`, `evidence`, and `citations`. The `evidence` list contains the IDs of assets cited by the block. The image's `after` is the block ID where it appears in HTML and the destination of its return link in either format. If that block has no explicit link to the asset, the renderer adds one. The PDF groups evidence after the argument overview and links to it from the text.
+
+For an image or table, use the asset's optional `annotation` string for the reader's interpretation. It appears separately from `caption_en` and `caption_zh`. Use blank lines to separate paragraphs in the interpretation. See [the annotation guide](annotations.md) for attribution and examples.
 
 - IDs must be unique across sections, paragraphs and assets, and use ASCII letters, digits, hyphens or underscores. Start with a letter. Keep IDs stable when revising. `reader-content`, `argument-summary`, `reader-references` and `reader-evidence` are reserved.
 - Put real PDF physical page labels in `source` (for example `PDF p. 5–6`), or a verified heading or paragraph label when pagination is unavailable. Do not transpose journal numbering into file page numbering.

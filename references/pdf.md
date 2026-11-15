@@ -9,4 +9,4 @@ python scripts/render_pdf.py examples/reader.json reading.pdf --zh-font path/to/
 
 The PDF script tries common Windows, macOS and Linux TrueType font locations. If an appropriate font is elsewhere, pass `--zh-font` with an embeddable CJK TrueType file and optionally `--en-font` with a serif TrueType file. No fonts are downloaded at runtime. CJK system fonts stay on the machine where they are installed. If a symbol is absent in the selected font, use a suitable font or a verified equation crop.
 
-When an original paragraph has to continue onto a new page, the new page carries its block ID and a link back to the aligned note. Check that all text is selectable, no note is clipped, and page breaks do not obscure the block identity. Add the PDF to Zotero as a separate child attachment if desired.
+When source text or an annotation continues onto another page, the next page carries the block ID and a link back to the start of that pair. Figure and table interpretations appear below their captions. Check that text is selectable, notes are complete, and page breaks preserve the block identity. Add the PDF to Zotero as a separate child attachment if desired.

@@ -33,6 +33,10 @@ def array(obj, key, required=False):
     return value
 
 
+def paragraphs(text):
+    return re.split(r'\r?\n[ \t]*\r?\n\s*', text.strip())
+
+
 def locate_spans(text, items, value_key, location):
     spans = []
     for item in items:
@@ -113,7 +117,11 @@ def load_reader(path):
             fields(block, ('id', 'source', 'en', 'zh'), 'block')
             key = block['id']
             register(block, 'block')
-            fields(block.get('annotation'), NOTE_FIELDS, f'{key}.annotation')
+            annotation = block.get('annotation')
+            if isinstance(annotation, str):
+                fields(block, ('annotation',), key)
+            else:
+                fields(annotation, NOTE_FIELDS, f'{key}.annotation')
             if 'heading' in block:
                 fields(block, ('heading',), key)
             marks = locate_spans(block['en'], array(block, 'marks'), 'kind', f'{key}.marks')
@@ -132,6 +140,8 @@ def load_reader(path):
     for item in array(data, 'evidence'):
         fields(item, ('id', 'title', 'file', 'source', 'caption_en', 'caption_zh', 'after'), 'evidence')
         register(item, 'evidence')
+        if 'annotation' in item:
+            fields(item, ('annotation',), item['id'])
         filename = PureWindowsPath(item['file'])
         source = parent.joinpath(*filename.parts).resolve()
         if (not source.is_relative_to(parent) or filename.drive or filename.root

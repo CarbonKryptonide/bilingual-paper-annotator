@@ -7,7 +7,7 @@ from operator import itemgetter
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
-from reader_data import COLORS, NOTE_FIELDS, load_reader
+from reader_data import COLORS, NOTE_FIELDS, load_reader, paragraphs
 
 
 def render(data, zh_font, en_font):
@@ -69,6 +69,11 @@ def render(data, zh_font, en_font):
     def size(para, wide):
         return para.wrap(wide, 10000)[1]
 
+    def fit(para, wide, available):
+        if size(para, wide) <= available:
+            return [para]
+        return para.split(wide, available) if available >= 30 else []
+
     def draw(para, x, top, wide):
         tall = size(para, wide)
         para.drawOn(canvas, x, top-tall)
@@ -113,7 +118,7 @@ def render(data, zh_font, en_font):
             chunk = remaining[0]
             if y-bottom < 30:
                 new_page()
-            chunks = [chunk] if size(chunk, wide) <= y-bottom else chunk.split(wide, y-bottom)
+            chunks = fit(chunk, wide, y-bottom)
             if not chunks:
                 new_page()
                 continue
@@ -147,10 +152,14 @@ def render(data, zh_font, en_font):
         for block in section['blocks']:
             tone = next((kind for kind, _, _ in block['runs'] if kind), 'method')
             bg, edge, category = COLORS[tone]
-            fields = '<br/><br/>'.join(f'<font color="{edge}">{label}</font><br/>{escape(block["annotation"][key])}'
-                                       for key, label in NOTE_FIELDS.items())
-            note = p(fields, 'note')
-            note_h = size(note, right-23)
+            annotation = block['annotation']
+            if isinstance(annotation, str):
+                notes = [p(escape(para), 'note') for para in paragraphs(annotation)]
+            else:
+                fields = '<br/><br/>'.join(f'<font color="{edge}">{label}</font><br/>{escape(annotation[key])}'
+                                           for key, label in NOTE_FIELDS.items())
+                notes = [p(fields, 'note')]
+            note_w = right-23
             locator = f'{escape(block["id"])} · {escape(block["source"])}'
             if block['evidence']:
                 locator += ' · ' + ' · '.join(link(key, '查看' + data['evidence'][key]['title']) for key in block['evidence'])
@@ -159,9 +168,9 @@ def render(data, zh_font, en_font):
             subheading = p(escape(block['heading']), 'zh') if 'heading' in block else None
             if subheading:
                 heading_h += size(subheading, width)+5
-            need = max(112, note_h+44, size(locator,left)+40)+heading_h
+            need = max(112, size(locator,left)+40)+heading_h
             if need > h-56-bottom:
-                raise ValueError(f'{block["id"]}: shorten the annotation or heading for PDF pagination')
+                raise ValueError(f'{block["id"]}: shorten the source label or heading for PDF pagination')
             if y-bottom < need:
                 new_page()
             if is_first_block:
@@ -181,22 +190,16 @@ def render(data, zh_font, en_font):
                 p(''.join(en).replace('\n', '<br/>'), 'en'), False
             ), (p(escape(block['zh']).replace('\n', '<br/>'), 'zh'), True)]
             first = True
-            while parts:
+            continuation = p(escape(block['id']) + ' · 续上页　' + link(block['id'], '返回本段开头'), 'small')
+            while parts or notes:
                 start = y
-                if first:
-                    fill(note_x, y, right, note_h+34, bg)
-                    fill(note_x, y, 3, note_h+34, edge)
-                    draw(p(category, 'small'), note_x+11, y-8, right-23)
-                    draw(note, note_x+11, y-22, right-23)
-                    y -= draw(locator, margin, y, left)+5
-                else:
-                    y -= draw(p(escape(block['id']) + ' · 续上页　' + link(block['id'],'返回本段批注'), 'small'), margin, y, left)+5
+                y -= draw(locator if first else continuation, margin, y, left)+5
 
                 while parts:
                     para, chinese = parts[0]
                     wide, pad = (left-21,14) if chinese else (left,0)
                     available = y-bottom-12-pad
-                    pieces = [para] if size(para,wide) <= available else para.split(wide,available) if available >= 30 else []
+                    pieces = fit(para, wide, available)
                     if not pieces:
                         break
                     chunk = pieces[0]
@@ -209,9 +212,28 @@ def render(data, zh_font, en_font):
                     parts[:1] = [(piece,chinese) for piece in pieces[1:]]
                     if len(pieces)>1:
                         break
-                if first:
-                    y = min(y,start-note_h-43)
-                if parts:
+                # Pack and draw the annotation independently of the source column.
+                note_y = start-22
+                chunks = []
+                while notes:
+                    pieces = fit(notes[0], note_w, note_y-bottom-14)
+                    if not pieces:
+                        break
+                    chunks.append((pieces[0], note_y))
+                    note_y -= size(pieces[0], note_w)+7
+                    notes[:1] = pieces[1:]
+                    if len(pieces) > 1:
+                        break
+                if chunks:
+                    note_h = start-note_y+4
+                    fill(note_x, start, right, note_h, bg)
+                    fill(note_x, start, 3, note_h, edge)
+                    label = category if first else '批注续上页'
+                    draw(p(label, 'small'), note_x+11, start-8, note_w)
+                    for chunk, top in chunks:
+                        draw(chunk, note_x+11, top, note_w)
+                    y = min(y, note_y-9)
+                if parts or notes:
                     new_page()
                     first = False
             fill(margin,y,width,.6,line)
@@ -243,6 +265,11 @@ def render(data, zh_font, en_font):
         iw, ih = image.getSize()
         caption_height = size(zh,width)+size(en,width)
         caption_reserve = min(caption_height+24,155)
+        figure_notes = []
+        if 'annotation' in item:
+            figure_notes = [p(escape(text), 'zh') for text in paragraphs(item['annotation'])]
+            note_height = sum(size(note, width)+7 for note in figure_notes)
+            caption_reserve += min(155, max(72, note_height+35))
         scale = min(width/iw,(y-bottom-caption_reserve)/ih)
         canvas.drawImage(image,(w-iw*scale)/2,y-ih*scale,iw*scale,ih*scale)
         y -= ih*scale+9
@@ -252,6 +279,15 @@ def render(data, zh_font, en_font):
         else:
             prose(zh)
             prose(en)
+        if figure_notes:
+            if y-bottom < 75:
+                new_page()
+            y -= 8
+            fill(margin, y, width, .7, line)
+            y -= 5
+            prose(p(f'<font color="{navy}">图表解读</font>', 'small'), spacing=4)
+            for note in figure_notes:
+                prose(note)
 
     if data['references']:
         new_page()

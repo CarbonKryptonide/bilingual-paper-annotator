@@ -47,6 +47,8 @@ mark { background:var(--mark); color:inherit; border-radius:2px; box-decoration-
 .annotation dl,.annotation dd { margin:0 }
 .annotation dt { font-weight:700; margin-block:.5rem .08rem }
 .annotation dt:first-child { margin-block-start:0 }
+.note-prose p { margin:0 }
+.note-prose p + p { margin-block-start:.68rem }
 .study-guide { padding:.6rem 1rem; border:1px solid var(--line); background:#f3efe5; margin-block:1rem }
 .study-guide h2 { font-size:1.15rem; margin-block:.15rem .42rem; padding:0; border:0 }
 .study-guide p { margin:.25rem 0 }
@@ -63,9 +65,13 @@ mark { background:var(--mark); color:inherit; border-radius:2px; box-decoration-
 .evidence-links { display:flex; flex-wrap:wrap; gap:.25rem 1rem; margin:.75rem 0 0 }
 .pair:target,.evidence:target,.study-prompt:target,.reference-entry:target { outline:2px solid #97611e; outline-offset:4px }
 .evidence { margin:1.1rem 0; padding:clamp(.7rem,3vw,1.25rem); background:#f2eee4; border:1px solid var(--line) }
+.evidence figure { margin:0 }
 .evidence img { display:block; max-inline-size:100%; block-size:auto; margin:0 auto 1rem; background:white }
 figcaption p { margin:.45rem 0 }
 .figure-name { font-weight:700; margin:0 0 .7rem }
+.figure-note { margin-block-start:1rem }
+.figure-note-title { margin:0 0 .35rem }
+.evidence-return { margin:.65rem 0 0 }
 .chain { padding-inline-start:1.6rem }
 .chain li { padding:.4rem .6rem; border-block-end:1px solid var(--line) }
 .chain strong { margin-inline-end:.55em }
