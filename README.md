@@ -18,6 +18,17 @@
 
 只说“双栏精读”也可以自动匹配，是否自动选择由宿主决定。翻译和批注由 agent 根据原文完成。本项目脚本从已对齐的阅读数据生成版面。
 
+## 精读前先准备 Markdown
+
+技能处理论文时，先复用同源且已核对的 Markdown，或调用项目自带脚本在本地转换原文。新环境按来源格式安装 [Microsoft MarkItDown](https://github.com/microsoft/markitdown)，下面是 PDF 示例。
+
+```text
+python -m pip install "markitdown[pdf]"
+python scripts/prepare_source.py "paper.pdf" -o "work/paper-source.md"
+```
+
+预计会反复读同一篇论文时，第一次转换和后续调用都可加 `--reuse`，复用已校验的结果。这一步用来定位正文和引文。页码、栏序、图表和公式仍需对照原文，扫描页按需补做本地 OCR 或看图。[原文准备与验收](references/source-preparation.md)
+
 ## 不用 agent 试跑样例
 
 需要 Python 3.10 或更高版本。从项目根目录执行：
