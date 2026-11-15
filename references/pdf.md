@@ -1,6 +1,6 @@
 # Optional PDF output
 
-Use PDF when the reader prefers fixed page layout, printer-friendly output, or the PDF annotation workflow. Use the same verified JSON file and source crops as the HTML. PDF uses horizontal A4, selectable English and Chinese, section bookmarks, highlight colors, links to evidence and links back to the text.
+Use PDF when the reader prefers fixed page layout, printer-friendly output, or the PDF annotation workflow. Use the same verified JSON file and source crops as the HTML. PDF uses horizontal A4, selectable English and Chinese, section bookmarks, highlight colors, and links between the text and its figures or bibliography entries.
 
 ```text
 python -m pip install reportlab

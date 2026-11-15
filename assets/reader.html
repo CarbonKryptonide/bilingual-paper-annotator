@@ -61,7 +61,7 @@ mark { background:var(--mark); color:inherit; border-radius:2px; box-decoration-
 .study-sources,.study-next { font-size:.85rem }
 .study-next { margin:.34rem 0 0 }
 .evidence-links { display:flex; flex-wrap:wrap; gap:.25rem 1rem; margin:.75rem 0 0 }
-.pair:target,.evidence:target,.study-prompt:target { outline:2px solid #97611e; outline-offset:4px }
+.pair:target,.evidence:target,.study-prompt:target,.reference-entry:target { outline:2px solid #97611e; outline-offset:4px }
 .evidence { margin:1.1rem 0; padding:clamp(.7rem,3vw,1.25rem); background:#f2eee4; border:1px solid var(--line) }
 .evidence img { display:block; max-inline-size:100%; block-size:auto; margin:0 auto 1rem; background:white }
 figcaption p { margin:.45rem 0 }
@@ -74,6 +74,8 @@ figcaption p { margin:.45rem 0 }
 .bounds div { background:#eee9df; border-inline-start:3px solid #a48961; padding:.75rem 1rem }
 .bounds p { margin:.4rem 0 0 }
 .references { font: .94rem/1.52 var(--serif) }
+.reference-entry { list-style:none; margin-block:.8rem }
+.reference-links { display:flex; flex-wrap:wrap; gap:.2rem .85rem; margin-block-start:.2rem; font:.86rem/1.5 var(--ui) }
 footer { margin-block-start:2rem; padding-block:1.4rem; background:#ede8dc; color:var(--muted) }
 footer pre { white-space:pre-wrap; font-size:.82rem }
 @media (max-width:47.5rem) {

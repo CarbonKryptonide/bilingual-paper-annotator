@@ -2,6 +2,8 @@
 
 左栏逐段对照英文原文和中文译文，论点、术语、数据、让步和方法用五色标出；右栏拆解这段在论证里起什么作用、证据能支持到哪一步。读到关键结论，可以跳到原图核对，再返回正文。
 
+点击英文原文中的引文，可以跳到文末对应的参考文献，并从文献条目返回引用它的段落。HTML 和 PDF 都支持这组链接。
+
 默认生成可离线打开的单文件 HTML，也可导出 PDF。
 
 **支持导入 Zotero 阅读。**
@@ -10,7 +12,7 @@
 
 把整个 `bilingual-paper-annotator` 目录放进 Codex 的用户 skills 目录（通常是 `~/.codex/skills/`），然后提供有权处理的论文文件，并在 Codex 中输入：
 
-> 用 `$bilingual-paper-annotator` 精读这篇论文，保留逐段中英对照、五色高亮和图文跳转。输出 HTML，再导出一份 PDF。
+> 用 `$bilingual-paper-annotator` 精读这篇论文，保留逐段中英对照、五色高亮、图文跳转和参考文献跳转。输出 HTML，再导出一份 PDF。
 
 想先自己想一遍，可以加一句「启用三遍阅读自测」。题目跟着相关段落走，AI 参考答案默认折叠。第一次可以只做前 6 题。详见 [三遍阅读题库](references/three-pass.md)。
 
@@ -38,4 +40,4 @@ HTML 无 Python 第三方依赖。样例 HTML 带第一遍自测，PDF 保持固
 
 三轮阅读自测借鉴了 S. Keshav 的三遍阅读法。本项目把它改编为 16 道贴在相关段落旁的自测题，先抓主旨，再核对方法与证据，最后按需深入。AI 参考答案默认折叠。[How to Read a Paper](https://cs.uwaterloo.ca/~brecht/courses/Perf-Eval-Shared/readings/keshav-paper-reading.pdf)
 
-示例使用虚构研究和自制图，仅演示工作流。HTML 内嵌的 Lora、IBM Plex Sans 拉丁子集使用 SIL Open Font License，许可证位于 `assets/fonts/`。
+示例使用虚构研究、虚构文献和自制图，仅演示工作流。HTML 内嵌的 Lora、IBM Plex Sans 拉丁子集使用 SIL Open Font License，许可证位于 `assets/fonts/`。

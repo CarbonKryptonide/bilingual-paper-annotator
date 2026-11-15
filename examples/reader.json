@@ -12,9 +12,13 @@
         {
           "id": "P01",
           "source": "示例 p. 1",
-          "en": "Repeated readings under the same conditions varied between sample wells. We hypothesized that a brief mixing step would reduce variation in the assay.",
-          "zh": "在相同条件下重复测定时，不同样品孔的读数仍有波动。我们假设，在读数前短暂混合可降低测定结果的波动。",
+          "en": "Repeated readings under the same conditions varied between sample wells (Lane, 2022; Vale, 2023). We hypothesized that a brief mixing step would reduce variation in the assay.",
+          "zh": "在相同条件下重复测定时，不同样品孔的读数仍有波动（Lane, 2022；Vale, 2023）。我们假设，在读数前短暂混合可降低测定结果的波动。",
           "marks": [{"kind": "thesis", "text": "a brief mixing step would reduce variation"}],
+          "citations": [
+            {"text": "Lane, 2022", "target": "ref-lane-2022"},
+            {"text": "Vale, 2023", "target": "ref-vale-2023"}
+          ],
           "annotation": {
             "function": "提出可检验的假设。",
             "role": "把测定波动转化为可操作的混合条件对照。",
@@ -30,12 +34,13 @@
         {
           "id": "P02",
           "source": "示例 p. 2",
-          "en": "We assigned twelve wells to each condition in a randomized plate layout and compared their coefficients of variation.",
-          "zh": "每种条件分配十二个样品孔，按随机顺序布置在板上。我们比较了两种条件下读数的变异系数。",
+          "en": "We assigned twelve wells to each condition in a randomized plate layout and compared their coefficients of variation (Lane, 2022).",
+          "zh": "每种条件分配十二个样品孔，按随机顺序布置在板上。我们比较了两种条件下读数的变异系数（Lane, 2022）。",
           "marks": [
             {"kind": "method", "text": "randomized plate layout"},
             {"kind": "term", "text": "coefficients of variation"}
           ],
+          "citations": [{"text": "Lane, 2022", "target": "ref-lane-2022"}],
           "annotation": {
             "function": "规定比较方法及指标。",
             "role": "给出预混效果的可观察判据。",
@@ -111,8 +116,8 @@
       "number": 5,
       "at": "P01",
       "question": "前人做到哪里，还缺什么？",
-      "answer": "这个虚构示例只给出孔间读数波动，没有提供前人研究。应从真正论文的引言或引文里核对已有方法。",
-      "sources": [{"target": "P01", "label": "示例引言"}]
+      "answer": "示例引言提到孔间读数波动，但没有交代预混是否有效。文末两条虚构条目用于演示引文跳转。读真实论文时，可以顺着引文核对已有方法和证据。",
+      "sources": [{"target": "P01", "label": "示例引言"}, {"target": "ref-lane-2022", "label": "示例参考文献"}]
     },
     {
       "number": 6,
@@ -121,6 +126,10 @@
       "answer": "若在比较如何控制同板读数波动，可以继续看实验设计。若需要跨批次已验证的方法，本例的范围不足，可以先记下这项限制。",
       "sources": [{"target": "P02", "label": "实验设计"}, {"target": "P03", "label": "证据边界"}]
     }
+  ],
+  "references": [
+    {"id": "ref-lane-2022", "text": "Lane, A. (2022). Variation across assay wells. [Fictional example]"},
+    {"id": "ref-vale-2023", "text": "Vale, B. (2023). Sources of within-plate variation. [Fictional example]"}
   ],
   "summary": {
     "chain": [

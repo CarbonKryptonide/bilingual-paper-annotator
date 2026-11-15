@@ -3,6 +3,8 @@
 from argparse import ArgumentParser
 from base64 import b64encode
 from html import escape
+from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 from string import Template
 
@@ -82,9 +84,14 @@ def render(data):
             key = item['id']
             if 'heading' in item:
                 sections.append(f'<h3>{escape(item["heading"])}</h3>')
-            en = ''.join(f'<mark class="{k}" title="{COLORS[k][2]}">{escape(t)}</mark>' if k else escape(t)
-                         for k, t in item['segments'])
-            tone = next((k for k, _ in item['segments'] if k), 'method')
+            en = []
+            for target, runs in groupby(item['runs'], key=itemgetter(1)):
+                passage = ''.join(
+                    f'<mark class="{kind}" title="{COLORS[kind][2]}">{escape(text)}</mark>'
+                    if kind else escape(text) for kind, _, text in runs
+                )
+                en.append(f'<a href="#{target}">{passage}</a>' if target else passage)
+            tone = next((kind for kind, _, _ in item['runs'] if kind), 'method')
             fields = ''.join(f'<dt>{label}</dt><dd>{escape(item["annotation"][k])}</dd>' for k, label in NOTE_FIELDS.items())
             links = ''.join(anchor(k, f'查看{data["evidence"][k]["title"]}') for k in item['evidence'])
             actions = f'<p class="evidence-links">{links}</p>' if links else ''
@@ -94,7 +101,7 @@ def render(data):
             sections.append(
                 f'<article class="pair" id="{key}" tabindex="-1"><div>'
                 f'<p class="source">{key} · {escape(item["source"])}</p>'
-                f'<p class="en" lang="en">{en}</p><p class="zh">{escape(item["zh"])}</p></div>'
+                f'<p class="en" lang="en">{"".join(en)}</p><p class="zh">{escape(item["zh"])}</p></div>'
                 f'{notes}</article>'
             )
             sections.extend(visuals.get(key, []))
@@ -117,8 +124,19 @@ def render(data):
     references = ''
     if data['references']:
         navigation += anchor('reader-references', '参考文献')
-        entries = ''.join(f'<li>{escape(entry)}</li>' for entry in data['references'])
-        references = f'<section id="reader-references" tabindex="-1"><h2>参考文献</h2><ol class="references">{entries}</ol></section>'
+        entries = []
+        for entry in data['references']:
+            citation = escape(entry['text'])
+            if 'id' not in entry:
+                entries.append(f'<li>{citation}</li>')
+                continue
+            returns = ' · '.join(anchor(key, f'返回正文 {key}') for key in entry['cited_by'])
+            links = f'<div class="reference-links">{returns}</div>' if returns else ''
+            entries.append(f'<li class="reference-entry" id="{entry["id"]}" tabindex="-1">{citation}{links}</li>')
+        references = (
+            '<section id="reader-references" tabindex="-1"><h2>参考文献</h2>'
+            f'<ol class="references">{"".join(entries)}</ol></section>'
+        )
     course = f' · {escape(data["course"])}' if 'course' in data else ''
     source_url = f' · <a href="{escape(data["source_url"], quote=True)}">原论文</a>' if 'source_url' in data else ''
     font_licenses = ''.join(f'<pre>{escape((font_dir / name).read_text(encoding="utf-8-sig"))}</pre>'

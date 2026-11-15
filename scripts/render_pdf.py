@@ -2,6 +2,8 @@
 
 from argparse import ArgumentParser
 from io import BytesIO
+from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
@@ -103,7 +105,7 @@ def render(data, zh_font, en_font):
         fill(margin, y+4, width, .7, line)
         y -= 6
 
-    def prose(para, x=margin, wide=width, spacing=7):
+    def prose(para, x=margin, wide=width, spacing=7, target=None):
         """Flow auxiliary prose across pages while preserving full text."""
         nonlocal y
         remaining = [para]
@@ -115,6 +117,9 @@ def render(data, zh_font, en_font):
             if not chunks:
                 new_page()
                 continue
+            if target:
+                canvas.bookmarkHorizontalAbsolute(target, y)
+                target = None
             y -= draw(chunks[0], x, y, wide) + spacing
             remaining[:1] = chunks[1:]
             if remaining:
@@ -140,7 +145,7 @@ def render(data, zh_font, en_font):
     for section in data['sections']:
         is_first_block = True
         for block in section['blocks']:
-            tone = next((kind for kind, _ in block['segments'] if kind), 'method')
+            tone = next((kind for kind, _, _ in block['runs'] if kind), 'method')
             bg, edge, category = COLORS[tone]
             fields = '<br/><br/>'.join(f'<font color="{edge}">{label}</font><br/>{escape(block["annotation"][key])}'
                                        for key, label in NOTE_FIELDS.items())
@@ -165,9 +170,16 @@ def render(data, zh_font, en_font):
             if subheading:
                 y -= draw(subheading, margin, y, width)+5
             canvas.bookmarkHorizontalAbsolute(block['id'], y)
-            en = ''.join(f'<font backColor="{COLORS[k][0]}">{escape(t)}</font>' if k else escape(t)
-                         for k, t in block['segments'])
-            parts = [(p(en.replace('\n', '<br/>'), 'en'), False), (p(escape(block['zh']).replace('\n', '<br/>'), 'zh'), True)]
+            en = []
+            for target, runs in groupby(block['runs'], key=itemgetter(1)):
+                passage = ''.join(
+                    f'<font backColor="{COLORS[kind][0]}">{escape(text)}</font>'
+                    if kind else escape(text) for kind, _, text in runs
+                )
+                en.append(f'<link href="#{target}" color="#215f88"><u>{passage}</u></link>' if target else passage)
+            parts = [(
+                p(''.join(en).replace('\n', '<br/>'), 'en'), False
+            ), (p(escape(block['zh']).replace('\n', '<br/>'), 'zh'), True)]
             first = True
             while parts:
                 start = y
@@ -245,7 +257,11 @@ def render(data, zh_font, en_font):
         new_page()
         heading('参考文献','reader-references')
         for entry in data['references']:
-            prose(p(escape(entry),'caption'))
+            text = escape(entry['text'])
+            if entry.get('cited_by'):
+                returns = '　'.join(link(key, f'返回正文 {key}') for key in entry['cited_by'])
+                text += f'<br/><font name="ReaderCJK">{returns}</font>'
+            prose(p(text, 'caption'), target=entry.get('id'))
     canvas.showPage()
     canvas.save()
     return buffer.getbuffer()

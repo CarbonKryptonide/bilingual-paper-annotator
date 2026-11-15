@@ -2,6 +2,7 @@
 
 import json
 import re
+from itertools import pairwise
 from pathlib import PureWindowsPath
 from urllib.parse import urlsplit
 
@@ -32,31 +33,41 @@ def array(obj, key, required=False):
     return value
 
 
-def highlight_segments(text, marks, block_id):
+def locate_spans(text, items, value_key, location):
     spans = []
-    for mark in marks:
-        fields(mark, ('kind', 'text'), f'{block_id}.marks')
-        kind, phrase = mark['kind'], mark['text']
-        count = mark.get('occurrence', 1)
-        if kind not in COLORS or type(count) is not int or count < 1:
-            raise ValueError(f'{block_id}: invalid mark kind or occurrence')
+    for item in items:
+        fields(item, (value_key, 'text'), location)
+        phrase = item['text']
+        count = item.get('occurrence', 1)
+        if type(count) is not int or count < 1:
+            raise ValueError(f'{location}: invalid occurrence')
         start = -len(phrase)
         for _ in range(count):
             start = text.find(phrase, start + len(phrase))
             if start < 0:
-                raise ValueError(f'{block_id}: missing exact highlight {phrase!r}')
-        spans.append((start, start + len(phrase), kind))
-    segments, cursor = [], 0
-    for start, end, kind in sorted(spans):
+                raise ValueError(f'{location}: missing exact text {phrase!r}')
+        spans.append((start, start + len(phrase), item[value_key]))
+    spans.sort()
+    cursor = 0
+    for start, end, _ in spans:
         if cursor > start:
-            raise ValueError(f'{block_id}: overlapping highlights')
-        if cursor < start:
-            segments.append((None, text[cursor:start]))
-        segments.append((kind, text[start:end]))
+            raise ValueError(f'{location}: overlapping spans')
         cursor = end
-    if cursor < len(text):
-        segments.append((None, text[cursor:]))
-    return segments
+    return spans
+
+
+def inline_runs(text, marks, citations):
+    # A citation may cross a highlight boundary. Track the two layers separately.
+    changes = {0: {}, len(text): {}}
+    for layer, spans in enumerate((marks, citations)):
+        for start, end, value in spans:
+            changes.setdefault(start, {})[layer] = value
+            changes.setdefault(end, {})[layer] = None
+    active = [None, None]
+    for start, end in pairwise(sorted(changes)):
+        for layer, value in changes[start].items():
+            active[layer] = value
+        yield active[0], active[1], text[start:end]
 
 
 def load_reader(path):
@@ -79,6 +90,21 @@ def load_reader(path):
             raise ValueError(f'{location}: invalid or duplicate ID {key!r}')
         ids.add(key)
 
+    references = []
+    linked_refs = {}
+    for entry in array(data, 'references'):
+        if isinstance(entry, str):
+            if not entry.strip():
+                raise ValueError('references must contain non-empty entries')
+            references.append({'text': entry})
+            continue
+        fields(entry, ('id', 'text'), 'reference')
+        register(entry, 'reference')
+        reference = {'id': entry['id'], 'text': entry['text'], 'cited_by': []}
+        references.append(reference)
+        linked_refs[entry['id']] = reference
+    data['references'] = references
+
     blocks = {}
     for section in array(data, 'sections', required=True):
         fields(section, ('id', 'title'), 'section')
@@ -90,7 +116,15 @@ def load_reader(path):
             fields(block.get('annotation'), NOTE_FIELDS, f'{key}.annotation')
             if 'heading' in block:
                 fields(block, ('heading',), key)
-            block['segments'] = highlight_segments(block['en'], array(block, 'marks'), key)
+            marks = locate_spans(block['en'], array(block, 'marks'), 'kind', f'{key}.marks')
+            if any(kind not in COLORS for _, _, kind in marks):
+                raise ValueError(f'{key}.marks: unknown highlight kind')
+            citations = locate_spans(block['en'], array(block, 'citations'), 'target', f'{key}.citations')
+            for target in dict.fromkeys(target for _, _, target in citations):
+                if target not in linked_refs:
+                    raise ValueError(f'{key}.citations: unknown reference {target!r}')
+                linked_refs[target]['cited_by'].append(key)
+            block['runs'] = list(inline_runs(block['en'], marks, citations))
             blocks[key] = block
 
     parent = path.resolve().parent
@@ -127,9 +161,6 @@ def load_reader(path):
             fields(point, ('target',), 'summary.chain')
             if point['target'] not in ids - reserved:
                 raise ValueError(f'Unknown summary target {point["target"]!r}')
-    data['references'] = array(data, 'references')
-    if any(not isinstance(entry, str) or not entry.strip() for entry in data['references']):
-        raise ValueError('references must contain non-empty strings')
     numbers = set()
     for prompt in study:
         fields(prompt, ('at', 'question', 'answer'), 'study')
