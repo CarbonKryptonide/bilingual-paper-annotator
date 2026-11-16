@@ -51,7 +51,17 @@ mark { background:var(--mark); color:inherit; border-radius:2px; box-decoration-
 .note-prose p + p { margin-block-start:.68rem }
 .study-guide { padding:.6rem 1rem; border:1px solid var(--line); background:#f3efe5; margin-block:1rem }
 .study-guide h2 { font-size:1.15rem; margin-block:.15rem .42rem; padding:0; border:0 }
-.study-guide p { margin:.25rem 0 }
+.study-filter { display:none; min-inline-size:0; margin:0; padding:0; border:0 }
+.study-filter legend { padding:0; color:var(--muted); font-size:.88rem }
+.study-options { display:flex; flex-wrap:wrap; gap:0 1rem }
+.study-options label { display:inline-flex; align-items:center; gap:.45rem; min-block-size:44px; min-inline-size:44px; cursor:pointer }
+.study-options input { accent-color:var(--link); margin:0 }
+@supports selector(:has(*)) {
+  .study-filter { display:block }
+  main:has(.study-filter input[value="1"]:not(:checked)) [data-study-pass="1"],
+  main:has(.study-filter input[value="2"]:not(:checked)) [data-study-pass="2"],
+  main:has(.study-filter input[value="3"]:not(:checked)) [data-study-pass="3"] { display:none }
+}
 .study-guide ul { display:flex; flex-wrap:wrap; gap:.2rem 1.1rem; list-style:none; margin:.3rem 0 0; padding:0 }
 .study-guide a { display:inline-flex; align-items:center; min-block-size:2.3rem; font-weight:600 }
 .study-prompt { padding:.7rem .95rem; background:#f5f0e5; border-inline-start:4px solid #80683d; margin-block-end:.7rem }

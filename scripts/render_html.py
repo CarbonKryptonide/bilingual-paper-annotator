@@ -29,19 +29,23 @@ def render(data):
         return '<div class="note-prose">' + ''.join(f'<p>{escape(para)}</p>' for para in paragraphs(text)) + '</div>'
 
     prompts_by_block = {}
+    study_options = []
     study_links = []
-    for low, high, phase, label in [
+    for pass_number, (low, high, phase, label) in enumerate([
         (1, 6, '第一遍', '抓主旨，决定是否继续'),
         (7, 13, '第二遍', '看方法与证据'),
         (14, 16, '第三遍', '可选深入'),
-    ]:
+    ], start=1):
         prompts = [prompt for prompt in data['study'] if low <= prompt['number'] <= high]
         if prompts:
             first = prompts[0]['number']
             last = prompts[-1]['number']
             numbers = [prompt['number'] for prompt in prompts]
             span = f'Q{first}–{last}' if first < last and numbers == list(range(first,last+1)) else '、'.join(f'Q{n}' for n in numbers)
-            study_links.append(f'<li>{anchor(f"study-q{first}", f"{phase} · {label}（{span}）")}</li>')
+            study_options.append(f'<label><input type="checkbox" value="{pass_number}" checked>{phase}</label>')
+            study_links.append(
+                f'<li data-study-pass="{pass_number}">{anchor(f"study-q{first}", f"{phase} · {label}（{span}）")}</li>'
+            )
         for index, prompt in enumerate(prompts):
             n = prompt['number']
             sources = prompt.get('sources', [])
@@ -53,7 +57,7 @@ def render(data):
                 following = prompts[index+1]['number']
                 onward = f'<p class="study-next">{anchor(f"study-q{following}", f"下一题 · Q{following}")}</p>'
             prompts_by_block.setdefault(prompt['at'], []).append(
-                f'<div class="study-prompt" id="study-q{n}" tabindex="-1">'
+                f'<div class="study-prompt" data-study-pass="{pass_number}" id="study-q{n}" tabindex="-1">'
                 f'<p class="study-label">{phase} · Q{n}</p><p class="study-question">{escape(prompt["question"])}</p>'
                 f'<details class="study-answer"><summary aria-label="查看 AI 参考答案 · Q{n}">查看 AI 参考答案</summary>'
                 f'<div class="study-answer-body">{answer}</div></details>{onward}</div>'
@@ -62,8 +66,9 @@ def render(data):
     if study_links:
         study_guide = (
             '<section class="study-guide" id="study-guide" tabindex="-1"><h2>三遍阅读自测</h2>'
-            '<p>按遍次进入，先自己作答，再展开参考答案。读完第一遍就可以决定是否继续。</p>'
-            '<ul>' + ''.join(study_links) + '</ul></section>'
+            '<fieldset class="study-filter"><legend>显示题目（可多选）</legend>'
+            f'<div class="study-options">{"".join(study_options)}</div></fieldset>'
+            f'<ul>{"".join(study_links)}</ul></section>'
         )
 
     visuals = {}

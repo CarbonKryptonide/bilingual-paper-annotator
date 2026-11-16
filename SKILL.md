@@ -2,7 +2,7 @@
 name: bilingual-paper-annotator
 description: Make an English–Chinese two-column paper reader with paragraph and figure interpretation, evidence and bibliography links, and optional three-pass reading questions with folded answers. Use for 论文双栏批注、双栏精读、中英对照论证分析、双栏三遍阅读自测. Delivers offline HTML, with optional PDF export and Zotero import support.
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # Bilingual Paper Annotator
@@ -15,7 +15,7 @@ Create a reader for a supplied paper or the requested excerpt. Default output is
 4. **Render and verify.** Run the selected command below. Inspect readable text and layout at the intended width. Spot-check claim attribution and figure readings against the original pages. Check that figure and bibliography links land on the right entries and return to their paragraphs. The HTML uses ordinary fragment links and visible figures because the Zotero snapshot reader disables page JavaScript. For PDF, reopen and render representative pages and verify text selection and any split paragraphs or notes.
 5. **Deliver.** Provide the requested format and disclose source gaps. For Zotero use, follow [the attachment guide](references/zotero.md). Preserve an already annotated snapshot as a versioned attachment. Writing to a Zotero library needs authorization for that action.
 
-When the user asks for the three-pass worksheet or contextual self-test, follow [the three-pass questions](references/three-pass.md). Use the optional HTML input field `study` to place prompts beside relevant passages and keep reference answers folded. A first-pass-only request uses Q1–6. PDF continues to provide the fixed-layout reading edition.
+When the user asks for the three-pass worksheet or contextual self-test, follow [the three-pass questions](references/three-pass.md). Use the optional HTML input field `study` to place prompts beside relevant passages and keep reference answers folded. Include all three passes unless the user limits the scope. The HTML opens with the available passes selected. Readers can independently show or hide each pass using checkboxes at the top. PDF continues to provide the fixed-layout reading edition.
 
 ```text
 python <skill-dir>/scripts/prepare_source.py paper.pdf -o work/paper-source.md

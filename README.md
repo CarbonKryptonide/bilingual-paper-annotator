@@ -16,7 +16,7 @@
 
 > 用 `$bilingual-paper-annotator` 精读这篇论文，保留逐段中英对照、五色高亮、图文跳转和参考文献跳转。输出 HTML，再导出一份 PDF。
 
-想先自己想一遍，可以加一句「启用三遍阅读自测」。题目跟着相关段落走，AI 参考答案默认折叠。第一次可以只做前 6 题。详见 [三遍阅读题库](references/three-pass.md)。
+想边读边自测，可以加一句「启用三遍阅读自测」。打开 HTML 后，在页首勾选要显示的遍次，可同时选 0 到 3 遍。默认勾选读稿中已准备的遍次。题目在对应段落旁，AI 参考答案默认折叠。[三遍阅读题库](references/three-pass.md)
 
 只说“双栏精读”也可以自动匹配，是否自动选择由宿主决定。翻译和批注由 agent 根据原文完成。本项目脚本从已对齐的阅读数据生成版面。
 
@@ -41,7 +41,7 @@ python -m pip install reportlab
 python scripts/render_pdf.py examples/reader.json demo.pdf
 ```
 
-HTML 无 Python 第三方依赖。样例 HTML 带第一遍自测，PDF 保持固定版式，折叠自测只在 HTML 中显示。PDF 如果找不到中文字体，按提示用 `--zh-font` 指定本机 CJK TrueType 字体。更详细的字段见 [阅读数据格式](references/input-format.md)。
+HTML 无 Python 第三方依赖。样例 HTML 可试用三遍自测的筛选和折叠答案。PDF 如果找不到中文字体，按提示用 `--zh-font` 指定本机 CJK TrueType 字体。更详细的字段见 [阅读数据格式](references/input-format.md)。
 
 ## 可选用法：导入 Zotero 阅读
 
