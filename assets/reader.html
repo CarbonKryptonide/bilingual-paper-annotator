@@ -32,7 +32,8 @@ h1 { font-size:clamp(1.65rem,3.4vw,2.7rem); line-height:1.24; text-wrap:balance;
 nav { position:sticky; inset-block-start:0; z-index:2; background:var(--paper); border-block-end:1px solid var(--line); max-block-size:5.35rem; overflow:auto }
 .nav-links { padding-block:.24rem; gap:.12rem .55rem }
 .nav-links a { display:inline-flex; align-items:center; max-inline-size:100%; min-block-size:2.3rem; padding:.22rem .4rem; color:var(--ink); font-weight:600 }
-.notes-enabled .reader-controls { position:sticky; inset-block-start:0; z-index:2 }
+.reader-controls { display:contents }
+.notes-enabled .reader-controls { display:block; position:sticky; inset-block-start:0; z-index:2 }
 .notes-enabled .reader-controls nav { position:static }
 .reading-tools { background:var(--paper); border-block-end:1px solid var(--line) }
 .reading-tools [hidden],.reader-notes [hidden] { display:none }
