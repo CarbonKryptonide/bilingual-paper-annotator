@@ -1,8 +1,8 @@
 ---
 name: bilingual-paper-annotator
-description: Make an English–Chinese two-column paper reader with paragraph and figure interpretation, evidence and bibliography links, and optional three-pass reading questions with folded answers. Use for 论文双栏批注、双栏精读、中英对照论证分析、双栏三遍阅读自测. Delivers offline HTML, with optional PDF export and Zotero import support.
+description: Make an offline English–Chinese paper reader with paragraph and figure interpretation, sentence alignment, browser notes, evidence and bibliography links, and optional three-pass reading questions. Use for 论文双栏批注、双栏精读、中英划词对照、三遍阅读自测. Supports optional PDF export and Zotero import.
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Bilingual Paper Annotator
@@ -12,10 +12,14 @@ Create a reader for a supplied paper or the requested excerpt. Default output is
 1. **Prepare the source.** Reuse supplied Markdown or a reviewed conversion that matches the source and scope. Otherwise, prepare local Markdown with `scripts/prepare_source.py` via MarkItDown. Use the original PDF or page-aware tools to verify paragraph order and physical page numbers. Follow [source preparation](references/source-preparation.md) for reuse, excerpt handling and targeted OCR or visual checks. Keep supplements, unavailable pages and uncertain extractions explicit.
 2. **Build aligned blocks.** Follow [the input contract](references/input-format.md). Preserve source prose, qualifications, units, citation markers and order. Give each original paragraph an idiomatic Chinese translation, a source locator, exact highlight spans, and a Chinese annotation in flowing prose. Explain what the paragraph contributes and how the reasoning works. Attribute reported claims and author interpretations, and signal any inference or critique as your own at the point where it appears. Use [the annotation guide](references/annotations.md) to choose the depth and phrasing. Retain stable IDs.
 3. **Ground the argument.** Include source crops of material figures, tables and uncertain display equations and link them to the relevant blocks. Add a reading note beside each key figure or table that explains what to compare, what the evidence shows, and where the inference stops. Keep original captions and their translations in their own fields. Map original citation markers to verified bibliography entries using `citations` and preserve unmatched markers as text. Write a short chain from question through evidence to conclusion and any material gaps. State the author's claim, strongest support and weakest link.
-4. **Render and verify.** Run the selected command below. Inspect readable text and layout at the intended width. Spot-check claim attribution and figure readings against the original pages. Check that figure and bibliography links land on the right entries and return to their paragraphs. The HTML uses ordinary fragment links and visible figures because the Zotero snapshot reader disables page JavaScript. For PDF, reopen and render representative pages and verify text selection and any split paragraphs or notes.
+4. **Render and verify.** Run the selected command below. Inspect readable text and layout at the intended width. Spot-check claim attribution and figure readings against the original pages. Check that figure and bibliography links land on the right entries and return to their paragraphs. Use ordinary fragment links for Zotero snapshots, where page JavaScript is disabled. For PDF, reopen and render representative pages and verify text selection and any split paragraphs or notes.
 5. **Deliver.** Provide the requested format and disclose source gaps. For Zotero use, follow [the attachment guide](references/zotero.md). Preserve an already annotated snapshot as a versioned attachment. Writing to a Zotero library needs authorization for that action.
 
 When the user asks for the three-pass worksheet or contextual self-test, follow [the three-pass questions](references/three-pass.md). Use the optional HTML input field `study` to place prompts beside relevant passages and keep reference answers folded. Include all three passes unless the user limits the scope. The HTML opens with the available passes selected. Readers can independently show or hide each pass using checkboxes at the top. PDF continues to provide the fixed-layout reading edition.
+
+For interactive sentence comparison, add verified [`alignments`](references/input-format.md#sentence-alignment) to the requested blocks. Cover both languages throughout blocks described as fully aligned. Include annotation wording where it discusses the mapped sentences, and link other evidence as needed. In a browser, select text in each mapped field and verify the counterparts. With scripts disabled, expand 语句对照 under the translation and check that the selected entry shows its excerpts in place.
+
+The browser toolbar saves highlights and notes on a selection within one source paragraph, translation or paragraph annotation. Keep the same optional `reader_id` and block IDs when regenerating a reader with saved notes. To verify an interactive delivery, save a note, reopen the file, locate the note from the list, and export and reimport its JSON backup.
 
 ```text
 python <skill-dir>/scripts/prepare_source.py paper.pdf -o work/paper-source.md

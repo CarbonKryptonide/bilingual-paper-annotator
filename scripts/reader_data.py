@@ -14,6 +14,7 @@ COLORS = {
     'method': ('#e9ddfc', '#674884', '方法说明'),
 }
 NOTE_FIELDS = {'function': '段落功能', 'role': '逻辑角色', 'critique': '技巧与局限'}
+ALIGNMENT_FIELDS = ('en', 'zh', 'annotation')
 SYSTEM_IDS = {'reader-content', 'argument-summary', 'reader-references', 'reader-evidence'}
 STUDY_IDS = {'study-guide'} | {f'study-q{n}' for n in range(1, 17)}
 
@@ -37,20 +38,23 @@ def paragraphs(text):
     return re.split(r'\r?\n[ \t]*\r?\n\s*', text.strip())
 
 
+def span_bounds(text, phrase, count, location):
+    if type(count) is not int or count < 1:
+        raise ValueError(f'{location}: invalid occurrence')
+    start = -len(phrase)
+    for _ in range(count):
+        start = text.find(phrase, start + len(phrase))
+        if start < 0:
+            raise ValueError(f'{location}: missing exact text {phrase!r}')
+    return start, start + len(phrase)
+
+
 def locate_spans(text, items, value_key, location):
     spans = []
     for item in items:
         fields(item, (value_key, 'text'), location)
-        phrase = item['text']
-        count = item.get('occurrence', 1)
-        if type(count) is not int or count < 1:
-            raise ValueError(f'{location}: invalid occurrence')
-        start = -len(phrase)
-        for _ in range(count):
-            start = text.find(phrase, start + len(phrase))
-            if start < 0:
-                raise ValueError(f'{location}: missing exact text {phrase!r}')
-        spans.append((start, start + len(phrase), item[value_key]))
+        start, end = span_bounds(text, item['text'], item.get('occurrence', 1), location)
+        spans.append((start, end, item[value_key]))
     spans.sort()
     cursor = 0
     for start, end, _ in spans:
@@ -58,6 +62,34 @@ def locate_spans(text, items, value_key, location):
             raise ValueError(f'{location}: overlapping spans')
         cursor = end
     return spans
+
+
+def load_alignments(block):
+    groups = []
+    for number, group in enumerate(array(block, 'alignments'), 1):
+        location = f'{block["id"]}.alignments[{number}]'
+        fields(group, (), location)
+        spans = {}
+        for lane in ALIGNMENT_FIELDS:
+            entries = array(group, lane, required=lane != 'annotation')
+            text = block[lane]
+            if lane == 'annotation' and entries:
+                if not isinstance(text, str):
+                    raise ValueError(f'{location}.annotation requires a prose annotation')
+                text = '\n\n'.join(paragraphs(text))
+            ranges = []
+            for entry in entries:
+                fields(entry, ('text',), f'{location}.{lane}')
+                phrase = entry['text']
+                if lane == 'annotation' and re.search(r'\r?\n[ \t]*\r?\n', phrase):
+                    raise ValueError(f'{location}.annotation: use one span per annotation paragraph')
+                ranges.append(span_bounds(text, phrase, entry.get('occurrence', 1), f'{location}.{lane}'))
+            spans[lane] = sorted(set(ranges))
+        sources = array(group, 'sources')
+        for source in sources:
+            fields(source, ('target', 'label'), f'{location}.sources')
+        groups.append(dict(spans=spans, sources=sources))
+    return groups
 
 
 def inline_runs(text, marks, citations):
@@ -77,7 +109,7 @@ def inline_runs(text, marks, citations):
 def load_reader(path):
     data = json.loads(path.read_text(encoding='utf-8-sig'))
     fields(data, ('title', 'title_zh', 'citation', 'scope'), 'reader')
-    for key in ('course', 'source_url'):
+    for key in ('course', 'source_url', 'reader_id'):
         if key in data:
             fields(data, (key,), 'reader')
     if 'source_url' in data:
@@ -122,6 +154,7 @@ def load_reader(path):
                 fields(block, ('annotation',), key)
             else:
                 fields(annotation, NOTE_FIELDS, f'{key}.annotation')
+            block['alignments'] = load_alignments(block)
             if 'heading' in block:
                 fields(block, ('heading',), key)
             marks = locate_spans(block['en'], array(block, 'marks'), 'kind', f'{key}.marks')
@@ -162,6 +195,12 @@ def load_reader(path):
         if key not in links:
             links.append(key)
     data['evidence'] = evidence
+    source_ids = ids - reserved
+    for block in blocks.values():
+        for group in block['alignments']:
+            for source in group['sources']:
+                if source['target'] not in source_ids:
+                    raise ValueError(f'{block["id"]}.alignments: unknown source {source["target"]!r}')
 
     summary = data.get('summary')
     fields(summary, ('claim', 'strongest', 'weakest'), 'summary')

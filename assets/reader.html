@@ -14,7 +14,7 @@ $mark_colors
   --serif:Lora,Georgia,"Noto Serif CJK SC",serif;
 }
 * { box-sizing:border-box }
-html { scroll-padding-block-start:6rem }
+html { scroll-padding-block-start:var(--reader-scroll-padding,6rem) }
 body { margin:0; background:var(--paper); color:var(--ink); font:1rem/1.7 var(--ui); overflow-wrap:anywhere }
 a { color:var(--link); text-underline-offset:.22em }
 :focus-visible { outline:3px solid #9a4d16; outline-offset:3px }
@@ -32,6 +32,30 @@ h1 { font-size:clamp(1.65rem,3.4vw,2.7rem); line-height:1.24; text-wrap:balance;
 nav { position:sticky; inset-block-start:0; z-index:2; background:var(--paper); border-block-end:1px solid var(--line); max-block-size:5.35rem; overflow:auto }
 .nav-links { padding-block:.24rem; gap:.12rem .55rem }
 .nav-links a { display:inline-flex; align-items:center; max-inline-size:100%; min-block-size:2.3rem; padding:.22rem .4rem; color:var(--ink); font-weight:600 }
+.notes-enabled .reader-controls { position:sticky; inset-block-start:0; z-index:2 }
+.notes-enabled .reader-controls nav { position:static }
+.reading-tools { background:var(--paper); border-block-end:1px solid var(--line) }
+.reading-tools [hidden],.reader-notes [hidden] { display:none }
+.reading-tools-inner { display:flex; flex-wrap:wrap; gap:.15rem .55rem; align-items:center; padding-block:.3rem }
+.reading-tools button,.reader-notes button,.reading-tools summary { font:inherit; color:var(--link); cursor:pointer; padding:.25rem .45rem }
+.reading-tools button,.reader-notes button { background:var(--paper); border:1px solid var(--line); border-radius:.25rem }
+.reading-tools button:disabled,.reader-notes button:disabled { color:var(--muted); opacity:.65; cursor:default }
+.notes-menu { position:relative }
+.notes-menu-actions { position:absolute; inset-inline-end:0; z-index:1; display:flex; gap:.35rem; white-space:nowrap; padding:.5rem; background:var(--paper); border:1px solid var(--line) }
+#note-selection { font-size:.85rem; color:var(--muted); flex:1 1 12rem }
+#note-status:empty { display:none }
+#note-status { margin:0; padding-block-end:.25rem; font-size:.85rem; color:var(--muted) }
+.reader-notes { inset-inline-start:auto; margin:0 0 0 auto; inline-size:min(30rem,100%); block-size:100dvb; max-block-size:100%; max-inline-size:100%; border:0; border-inline-start:1px solid var(--line); padding:1rem; background:var(--paper); color:var(--ink); overflow:auto }
+.reader-notes:modal { overscroll-behavior:contain }
+.reader-notes::backdrop { background:#12233a66; overflow:hidden; overscroll-behavior:contain }
+.reader-notes header { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:0 0 .65rem; background:none; color:var(--ink); border-block-end:1px solid var(--line) }
+.reader-notes h2 { margin:0; padding:0; border:0; font-size:1.2rem }
+.reader-notes ol { list-style:none; padding:0; margin:.7rem 0 0 }
+.reader-notes li { padding:.65rem 0; border-block-end:1px solid var(--line) }
+.reader-notes li p,#note-quote { margin:.2rem 0 .5rem; white-space:pre-wrap }
+.reader-notes textarea { display:block; inline-size:100%; margin:.3rem 0 .5rem; padding:.5rem; font:inherit; color:var(--ink); background:white; border:1px solid var(--muted); border-radius:.25rem }
+.note-actions { display:flex; flex-wrap:wrap; gap:.35rem }
+::highlight(reader-notes) { text-decoration:underline solid #8c4416 .13em; text-underline-offset:.13em }
 .scope { color:var(--muted); max-inline-size:90ch; margin:1.4rem 0 }
 h2,h3 { line-height:1.35 }
 h2 { margin-block:2rem .5rem; padding-block-end:.5rem; border-block-end:1px solid var(--line) }
@@ -49,6 +73,19 @@ mark { background:var(--mark); color:inherit; border-radius:2px; box-decoration-
 .annotation dt:first-child { margin-block-start:0 }
 .note-prose p { margin:0 }
 .note-prose p + p { margin-block-start:.68rem }
+.alignment-hint { color:var(--muted); font-size:.9rem; margin:-.65rem 0 1rem }
+.alignment-hint span { display:none }
+.alignment-enabled .alignment-hint span { display:inline }
+.alignment-guide { font-size:.88rem; margin-block-start:.7rem }
+.alignment-guide summary { color:var(--link); cursor:pointer; padding-block:.25rem }
+.alignment-entry { margin-inline-start:1em; border-block-start:1px solid var(--line) }
+.alignment-excerpts { background:#f3efe5; border-inline-start:2px solid #ab9c7c; margin:.25rem 0 .5rem; padding:.55rem .8rem }
+.alignment-excerpts dt { font-weight:700 }
+.alignment-excerpts dd { margin:0 0 .5rem }
+.alignment-excerpts dd:last-child { margin-block-end:0 }
+.alignment-excerpts p,.alignment-sources { margin:0 }
+.alignment-excerpts [lang="en"] { font-family:var(--serif) }
+.alignment-match,[data-alignment]:target { text-decoration:underline dashed #80581e .12em; text-underline-offset:.22em }
 .study-guide { padding:.6rem 1rem; border:1px solid var(--line); background:#f3efe5; margin-block:1rem }
 .study-guide h2 { font-size:1.15rem; margin-block:.15rem .42rem; padding:0; border:0 }
 .study-filter { display:none; min-inline-size:0; margin:0; padding:0; border:0 }
@@ -97,12 +134,15 @@ footer pre { white-space:pre-wrap; font-size:.82rem }
 @media (max-width:47.5rem) {
   header { padding-block:1.3rem 1rem }
   nav { position:static; max-block-size:none; overflow:visible }
-  html { scroll-padding-block-start:.8rem }
+  html { scroll-padding-block-start:var(--reader-scroll-padding,.8rem) }
+  .notes-enabled .reader-controls { display:contents }
+  .reading-tools { position:sticky; inset-block-start:0; z-index:2 }
+  .notes-menu-actions { position:static }
   .columns { display:none }
   .pair,.bounds { grid-template-columns:1fr }
   h2 { margin-block-start:1.3rem }
 }
-@media (pointer:coarse) { .nav-links a,.study-guide a,.study-answer summary { min-block-size:44px; min-inline-size:44px } }
+@media (pointer:coarse) { .nav-links a,.study-guide a,.study-answer summary,.alignment-guide summary,.reading-tools button,.reading-tools summary,.reader-notes button { min-block-size:44px; min-inline-size:44px } }
 </style>
 </head>
 <body>
@@ -114,9 +154,27 @@ footer pre { white-space:pre-wrap; font-size:.82rem }
 <p class="citation">$citation$course$source_url</p>
 <div class="legend" aria-label="五色标注图例">$legend</div>
 </div></header>
+<div class="reader-controls">
 <nav aria-label="章节"><div class="wrap nav-links">$navigation</div></nav>
-<main class="wrap" id="reader-content" tabindex="-1">
+<div class="reading-tools" id="reading-tools" role="group" aria-label="批注工具" hidden>
+<div class="wrap reading-tools-inner">
+<button type="button" id="note-select">选择</button>
+<button type="button" id="note-highlight" disabled>高亮</button>
+<button type="button" id="note-write" disabled>写笔记</button>
+<button type="button" id="note-list-open">笔记列表</button>
+<details class="notes-menu"><summary>导入／导出</summary><div class="notes-menu-actions">
+<button type="button" id="note-import">导入 JSON</button>
+<button type="button" id="note-export" disabled>导出 JSON</button>
+<input type="file" id="note-file" accept=".json,application/json" hidden>
+</div></details>
+<output id="note-selection">请在正文划选文字</output>
+</div>
+<p id="note-status" class="wrap" role="status"></p>
+</div>
+</div>
+<main class="wrap" id="reader-content" tabindex="-1" data-reader-id="$reader_id">
 <p class="scope">$scope</p>
+$alignment_hint
 $study_guide
 <div class="columns" aria-hidden="true"><span>英文原文与中文译文</span><span>论证批注</span></div>
 $sections
@@ -124,5 +182,18 @@ $summary
 $references
 </main>
 <footer><div class="wrap"><details><summary>字体许可证</summary>$font_licenses</details></div></footer>
+<dialog class="reader-notes" id="reader-notes" aria-labelledby="notes-title">
+<header><h2 id="notes-title">我的笔记</h2><form method="dialog"><button>关闭</button></form></header>
+<form id="note-editor" hidden>
+<blockquote id="note-quote"></blockquote>
+<label for="note-comment">笔记</label><textarea id="note-comment" rows="4" required></textarea>
+<div class="note-actions"><button>保存笔记</button><button type="button" id="note-cancel">取消编辑</button></div>
+</form>
+<p id="notes-empty">暂无笔记</p><ol id="note-entries"></ol>
+</dialog>
+$alignment_script
+<script>
+$notes_script
+</script>
 </body>
 </html>

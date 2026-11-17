@@ -1,16 +1,39 @@
-"""Render a single, script-free HTML reader for browsers and Zotero."""
+"""Render a standalone HTML reader with optional sentence alignment."""
 
 from argparse import ArgumentParser
 from base64 import b64encode
 from html import escape
-from itertools import groupby
+from itertools import groupby, pairwise
+import json
 from operator import itemgetter
 from pathlib import Path
 from string import Template
 
-from reader_data import COLORS, NOTE_FIELDS, load_reader, paragraphs
+from reader_data import ALIGNMENT_FIELDS, COLORS, NOTE_FIELDS, load_reader, paragraphs
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets'
+ALIGNMENT_LABELS = dict(zip(ALIGNMENT_FIELDS, ('原文', '译文', '批注')))
+
+
+def aligned_text(text, offset, spans, prefix, lane):
+    end = offset + len(text)
+    overlaps = [(start, stop, group) for start, stop, group in spans if start < end and stop > offset]
+    if not overlaps:
+        return escape(text)
+
+    cuts = {offset, end}
+    for start, stop, _ in overlaps:
+        cuts.update((max(offset, start), min(end, stop)))
+    chunks = []
+    for start, stop in pairwise(sorted(cuts)):
+        chunk = escape(text[start - offset:stop - offset])
+        active = [(first, group) for first, last, group in overlaps if first <= start < last]
+        if active:
+            groups = ' '.join(dict.fromkeys(group for _, group in active))
+            target = f' id="{prefix}{start}"' if any(first == start for first, _ in active) else ''
+            chunk = f'<span data-alignment="{groups}" data-alignment-lane="{lane}"{target}>{chunk}</span>'
+        chunks.append(chunk)
+    return ''.join(chunks)
 
 
 def render(data):
@@ -25,9 +48,15 @@ def render(data):
     def anchor(key, label):
         return f'<a href="#{key}">{escape(label)}</a>'
 
-    def note_prose(text):
-        return '<div class="note-prose">' + ''.join(f'<p>{escape(para)}</p>' for para in paragraphs(text)) + '</div>'
+    def note_prose(text, spans=(), prefix=''):
+        offset = 0
+        parts = []
+        for paragraph in paragraphs(text):
+            parts.append('<p>' + aligned_text(paragraph, offset, spans, prefix, 'annotation') + '</p>')
+            offset += len(paragraph) + 2
+        return '<div class="note-prose" data-note-field="annotation">' + ''.join(parts) + '</div>'
 
+    has_alignment = False
     prompts_by_block = {}
     study_options = []
     study_links = []
@@ -96,22 +125,62 @@ def render(data):
         sections.append(f'<section id="{section["id"]}" tabindex="-1"><h2>{escape(section["title"])}</h2>')
         for item in section['blocks']:
             key = item['id']
+            annotation = item['annotation']
             if 'heading' in item:
                 sections.append(f'<h3>{escape(item["heading"])}</h3>')
-            en = []
-            for target, runs in groupby(item['runs'], key=itemgetter(1)):
-                passage = ''.join(
-                    f'<mark class="{kind}" title="{COLORS[kind][2]}">{escape(text)}</mark>'
-                    if kind else escape(text) for kind, _, text in runs
+            spans = {lane: [] for lane in ALIGNMENT_FIELDS}
+            guide_items = []
+            texts = dict(en=item['en'], zh=item['zh'])
+            if item['alignments'] and isinstance(annotation, str):
+                texts['annotation'] = '\n\n'.join(paragraphs(annotation))
+            for number, group in enumerate(item['alignments'], 1):
+                group_key = f'{key}:{number}'
+                excerpts = []
+                for lane, ranges in group['spans'].items():
+                    if not ranges:
+                        continue
+                    label = ALIGNMENT_LABELS[lane]
+                    excerpts.append(f'<dt>{label}</dt>')
+                    for index, (start, stop) in enumerate(ranges, 1):
+                        spans[lane].append((start, stop, group_key))
+                        position = f' {index}' if len(ranges) > 1 else ''
+                        locate = anchor(f'align:{key}:{lane}:{start}', f'定位{label}{position}')
+                        lang = ' lang="en"' if lane == 'en' else ''
+                        excerpts.append(f'<dd><p{lang}>{escape(texts[lane][start:stop])}</p>{locate}</dd>')
+                links = ' · '.join(anchor(source['target'], source['label']) for source in group['sources'])
+                sources = f'<p class="alignment-sources">回看依据 {links}</p>' if links else ''
+                start, stop = group['spans']['zh'][0]
+                excerpt = item['zh'][start:stop]
+                if len(excerpt) > 32:
+                    excerpt = excerpt[:32] + '…'
+                guide_items.append(
+                    f'<details class="alignment-entry"><summary>{escape(excerpt)}</summary>'
+                    f'<dl class="alignment-excerpts">{"".join(excerpts)}</dl>{sources}</details>'
                 )
+            alignment_guide = ''
+            if guide_items:
+                has_alignment = True
+                alignment_guide = (
+                    '<details class="alignment-guide"><summary>语句对照</summary>'
+                    f'{"".join(guide_items)}</details>'
+                )
+            en = []
+            offset = 0
+            for target, runs in groupby(item['runs'], key=itemgetter(1)):
+                pieces = []
+                for kind, _, text in runs:
+                    chunk = aligned_text(text, offset, spans['en'], f'align:{key}:en:', 'en')
+                    offset += len(text)
+                    pieces.append(f'<mark class="{kind}" title="{COLORS[kind][2]}">{chunk}</mark>' if kind else chunk)
+                passage = ''.join(pieces)
                 en.append(f'<a href="#{target}">{passage}</a>' if target else passage)
+            zh = aligned_text(item['zh'], 0, spans['zh'], f'align:{key}:zh:', 'zh')
             tone = next((kind for kind, _, _ in item['runs'] if kind), 'method')
-            annotation = item['annotation']
             if isinstance(annotation, str):
-                body = note_prose(annotation)
+                body = note_prose(annotation, spans['annotation'], f'align:{key}:annotation:')
             else:
                 fields = ''.join(f'<dt>{label}</dt><dd>{escape(annotation[k])}</dd>' for k, label in NOTE_FIELDS.items())
-                body = f'<dl>{fields}</dl>'
+                body = f'<dl data-note-field="annotation">{fields}</dl>'
             links = ''.join(anchor(k, f'查看{data["evidence"][k]["title"]}') for k in item['evidence'])
             actions = f'<p class="evidence-links">{links}</p>' if links else ''
             notes = f'<aside class="annotation {tone}" aria-label="段落批注">{body}{actions}</aside>'
@@ -120,7 +189,8 @@ def render(data):
             sections.append(
                 f'<article class="pair" id="{key}" tabindex="-1"><div>'
                 f'<p class="source">{key} · {escape(item["source"])}</p>'
-                f'<p class="en" lang="en">{"".join(en)}</p><p class="zh">{escape(item["zh"])}</p></div>'
+                f'<p class="en" lang="en" data-note-field="en">{"".join(en)}</p>'
+                f'<p class="zh" data-note-field="zh">{zh}</p>{alignment_guide}</div>'
                 f'{notes}</article>'
             )
             sections.extend(visuals.get(key, []))
@@ -160,11 +230,22 @@ def render(data):
     source_url = f' · <a href="{escape(data["source_url"], quote=True)}">原论文</a>' if 'source_url' in data else ''
     font_licenses = ''.join(f'<pre>{escape((font_dir / name).read_text(encoding="utf-8-sig"))}</pre>'
                            for name in ['OFL-Lora.txt', 'OFL-IBM-Plex-Sans.txt'])
+    alignment_hint = ''
+    alignment_script = ''
+    if has_alignment:
+        alignment_hint = (
+            '<p class="alignment-hint"><span>划选已对齐的文字可标出对应语句。</span>'
+            '在译文下展开「语句对照」，可直接并读原文、译文和相关批注。</p>'
+        )
+        alignment_script = '<script>\n' + (ASSETS / 'alignment.js').read_text(encoding='utf-8') + '</script>'
+    reader_id = data.get('reader_id') or data.get('source_url') or json.dumps([data['title'], data['citation']], ensure_ascii=False)
     return Template((ASSETS / 'reader.html').read_text(encoding='utf-8')).substitute(
         title_zh=escape(data['title_zh']), title=escape(data['title']), citation=escape(data['citation']),
         scope=escape(data['scope']), course=course, source_url=source_url, legend=legend,
         font_faces='\n'.join(font_faces), mark_colors=mark_colors, font_licenses=font_licenses,
         navigation=navigation, study_guide=study_guide, sections='\n'.join(sections), summary=overview, references=references,
+        alignment_hint=alignment_hint, alignment_script=alignment_script,
+        reader_id=escape(reader_id), notes_script=(ASSETS / 'notes.js').read_text(encoding='utf-8'),
     )
 
 

@@ -7,6 +7,7 @@ Use UTF-8 JSON. Keep the data and evidence crops in the task workspace. The rend
 | `title`, `title_zh` | English source title and Chinese title, both strings |
 | `citation` | Authors, venue and year as a string |
 | `course`, `source_url` | Optional course or project name and verified HTTPS/HTTP DOI or publisher link |
+| `reader_id` | Optional stable identifier for browser notes. Reuse it and the block IDs across revisions of the same reader. Without it, notes identify the reader by `source_url`, or by its title and citation. |
 | `scope` | Verified scope and any important coverage gaps, as a string |
 | `sections` | Ordered list of objects with `id`, `title`, `blocks` |
 | `evidence` | Optional list of image assets with `id`, `title`, `file`, `source`, `caption_en`, `caption_zh`, `after`, and optional `annotation` |
@@ -27,5 +28,20 @@ For an image or table, use the asset's optional `annotation` string for the read
 - Use top-level sections for navigation. Group detailed paper subsections with a block's optional `heading`.
 - Mark the approach as excerpted or incomplete where applicable. Do not present missing supplementary data as reviewed. Keep the original article and generated translation private unless redistribution is permitted.
 - For `study`, the question number determines the pass (1–6, 7–13 or 14–16). Place each prompt at a block the reader can use to answer it. Supporting source links can target a section, block, evidence or bibliography ID. `study-guide` and `study-q1` through `study-q16` are reserved when this field is used. Use newlines within long answers when they improve readability. See [the question list](three-pass.md).
+
+## Sentence alignment
+
+Optionally add `alignments` to a block. Each group requires one or more exact excerpts from that block's `en` and `zh`. Put several excerpts in a field when a translation splits or combines sentences. A group may also include excerpts from a string `annotation`. Keep each annotation excerpt within one prose paragraph. The optional `occurrence` selects a repeated match, starting at 1. Use `sources` to link to additional passages, figures or references by ID.
+
+```json
+{
+  "en": [{"text": "The coefficient of variation was 8% without mixing and 5% after mixing."}],
+  "zh": [{"text": "未混合和预混条件下的变异系数分别为 8% 和 5%。"}],
+  "annotation": [{"text": "作者报告，未混合和预混条件下的变异系数分别为 8% 和 5%"}],
+  "sources": [{"target": "fig-1", "label": "图 1"}]
+}
+```
+
+The browser marks the corresponding excerpts when the reader selects any part of a mapped excerpt. With scripts disabled, expand 语句对照 under the translation and open a sentence entry to read its excerpts in place. Each entry also has links to locate the excerpts in the reader. Alignments in the input are optional and affect only HTML presentation.
 
 See [the self-contained example](../examples/reader.json) for valid input.
